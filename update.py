@@ -1,5 +1,6 @@
 import os
 import git
+import subprocess
 
 def sync_with_github(local_repo_path, github_repo_url, github_branch='master', commit_message='Sync with GitHub'):
     try:
@@ -35,6 +36,16 @@ def sync_with_github(local_repo_path, github_repo_url, github_branch='master', c
             origin.push()
 
             print("Sync successful.")
+
+            # Call the API3 script after a successful sync
+            api3_script_path = os.path.join(local_repo_path, "API3.py")
+            if os.path.exists(api3_script_path):
+                print("Calling API3 script...")
+                subprocess.run(["python", api3_script_path])
+                print("API3 script executed.")
+            else:
+                print("API3 script not found.")
+
         else:
             print("Local repository is up-to-date with the GitHub repository.")
 
