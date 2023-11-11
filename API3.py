@@ -1,4 +1,3 @@
-import threading
 from flask import Flask, request, jsonify
 import numpy as np
 import tensorflow as tf
@@ -8,10 +7,6 @@ import os
 import csv
 import datetime
 import sqlite3
-import schedule
-import subprocess
-import time
-import sys
 
 app = Flask(__name__)
 model = tf.keras.models.load_model('./BT_CNN_model_FINAL.h5', custom_objects={'F1Score': tfa.metrics.F1Score})
@@ -20,8 +15,6 @@ UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png'}
 CSV_FILE = os.path.join(UPLOAD_FOLDER, 'records.csv')  # Path to the CSV file
 
-stop_flask_api = False
-
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Define a dictionary to store active API keys
@@ -29,22 +22,6 @@ free_api_keys = {"qhLusfHmKhv47SKEoZ0dq09qV9yK8t35"}
 
 # Define a set to store active premium API keys
 premium_api_keys = set()
-
-def scheduled_task():
-    # Call the Python script every 30 minutes
-    subprocess.run(["python", "./update.py"])
-
-# Schedule the task to run every 30 minutes
-schedule.every(30).minutes.do(scheduled_task)
-
-def stop_api():
-    global stop_flask_api
-    stop_flask_api = True
-
-def run_scheduled_tasks():
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
 
 def login_user():
     # Extract data from the request
@@ -316,12 +293,4 @@ def upload_and_predict():
 if __name__ == "__main__":
     if not os.path.exists(UPLOAD_FOLDER):
         os.makedirs(UPLOAD_FOLDER)
-    
-    schedule_thread = threading.Thread(target=run_scheduled_tasks)
-    schedule_thread.start()
-
     app.run(host='0.0.0.0', port=2819)
-    
-    if stop_flask_api:
-        print("Stopping Flask API...")
-        sys.exit()

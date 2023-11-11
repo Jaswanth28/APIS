@@ -1,7 +1,7 @@
 import os
 import git
 
-def sync_with_github(local_repo_path, github_repo_url, github_branch='master'):
+def sync_with_github(local_repo_path, github_repo_url, github_branch='master', commit_message='Sync with GitHub'):
     try:
         # Check if the local repository exists
         if not os.path.isdir(local_repo_path):
@@ -10,6 +10,12 @@ def sync_with_github(local_repo_path, github_repo_url, github_branch='master'):
 
         # Open the local repository
         repo = git.Repo(local_repo_path)
+
+        # Add all tracked files to the staging area
+        repo.git.add('--all')
+
+        # Commit staged changes with the specified message
+        repo.git.commit('-m', commit_message)
 
         # Fetch changes from the remote repository
         origin = repo.remotes.origin
@@ -25,8 +31,8 @@ def sync_with_github(local_repo_path, github_repo_url, github_branch='master'):
         if local_commit != remote_commit:
             print("Differences found. Syncing with the GitHub repository...")
 
-            # Reset the local repository to the latest commit from the remote repository
-            repo.git.reset('--hard', f"origin/{github_branch}")
+            # Push changes to the remote repository
+            origin.push()
 
             print("Sync successful.")
         else:
