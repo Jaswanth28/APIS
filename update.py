@@ -23,12 +23,12 @@ def sync_with_github(local_repo_path, github_repo_url, github_branch='master'):
 
         # Check if there are differences between the local and remote repositories
         if local_commit != remote_commit:
-            print("Differences found. Pushing changes to the GitHub repository...")
+            print("Differences found. Syncing with the GitHub repository...")
 
-            # Push local changes to the GitHub repository
-            repo.git.push("origin", github_branch)
+            # Reset the local repository to the latest commit from the remote repository
+            repo.git.reset('--hard', f"origin/{github_branch}")
 
-            print("Push successful.")
+            print("Sync successful.")
         else:
             print("Local repository is up-to-date with the GitHub repository.")
 
