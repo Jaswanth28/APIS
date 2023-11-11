@@ -1,8 +1,7 @@
 import os
 import git
-import subprocess
 
-def sync_with_github(local_repo_path, github_repo_url, github_branch='master', commit_message='Sync with GitHub'):
+def sync_with_github(local_repo_path, github_repo_url, github_branch='master'):
     try:
         # Check if the local repository exists
         if not os.path.isdir(local_repo_path):
@@ -11,12 +10,6 @@ def sync_with_github(local_repo_path, github_repo_url, github_branch='master', c
 
         # Open the local repository
         repo = git.Repo(local_repo_path)
-
-        # Add all tracked files to the staging area
-        repo.git.add('--all')
-
-        # Commit staged changes with the specified message
-        repo.git.commit('-m', commit_message)
 
         # Fetch changes from the remote repository
         origin = repo.remotes.origin
@@ -32,22 +25,12 @@ def sync_with_github(local_repo_path, github_repo_url, github_branch='master', c
         if local_commit != remote_commit:
             print("Differences found. Syncing with the GitHub repository...")
 
-            # Push changes to the remote repository
-            origin.push()
+            # Reset the local repository to the latest commit from the remote repository
+            repo.git.reset('--hard', f"origin/{github_branch}")
 
             print("Sync successful.")
-
         else:
             print("Local repository is up-to-date with the GitHub repository.")
-
-        # Call the API3 script after every sync
-        api3_script_path = os.path.join(local_repo_path, "API3.py")
-        if os.path.exists(api3_script_path):
-            print("Calling API3 script...")
-            subprocess.run(["python", api3_script_path])
-            print("API3 script executed.")
-        else:
-            print("API3 script not found.")
 
     except Exception as e:
         print(f"Error syncing with GitHub: {e}")
