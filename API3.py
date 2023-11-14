@@ -119,6 +119,8 @@ def delete_rec(username):
 
         # Delete user from the 'users' table
         cursor.execute("DELETE FROM users WHERE username=?", (username,))
+
+        cursor.execute("DELETE FROM history WHERE username=?", (username,))
         conn.commit()
 
         # Close the database connection
@@ -161,16 +163,28 @@ load_premium_api_keys()
 
 def get_history_records(username):
     records = []
-    with open(CSV_FILE, mode='r') as csv_file:
-        csv_reader = csv.DictReader(csv_file)
-        for row in csv_reader:
-            if row['username'] == username:
-                records.append({
-                    'date': row['date'],
-                    'time': row['time'],
-                    'result': row['result']
-                })
+    try:
+        conn = sqlite3.connect('./user_credentials.db')
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT date, time, result
+            FROM history
+            WHERE username = ?
+        ''', (username,))
+        rows = cursor.fetchall()
+        conn.close()
+
+        for row in rows:
+            records.append({
+                'date': row[0],
+                'time': row[1],
+                'result': row[2]
+            })
+    except Exception as e:
+        print(f"Error fetching history records: {e}")
+
     return records
+
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -220,6 +234,18 @@ def predict_and_update_csv(image_path, username):
             writer.writeheader()
         
         writer.writerow({'username': username, 'date': date, 'time': time, 'result': predicted_class})
+    
+    try:
+        conn = sqlite3.connect('./user_credentials.db')
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO history (username, date, time, result)
+            VALUES (?, ?, ?, ?)
+        ''', (username, date, time, predicted_class))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"Error inserting data into 'history' table: {e}")
 
     return predicted_class
 
